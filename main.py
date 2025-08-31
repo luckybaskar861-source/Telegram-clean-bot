@@ -1,26 +1,25 @@
-from pyrogram import Client, filters
+from telegram import Update
+from telegram.ext import Updater, CommandHandler, CallbackContext
 
-API_ID = 25362995
-API_HASH = "1bd4bac9f262c3437d2d425a863b1f63"
 BOT_TOKEN = "8369273063:AAFCq1SpIqNSlcnEmYeu8pkLeOPbkEjH1pY"
 
-app = Client(
-    "cleaner-bot",
-    api_id=API_ID,
-    api_hash=API_HASH,
-    bot_token=BOT_TOKEN
-)
+def clean(update: Update, context: CallbackContext):
+    chat_id = update.effective_chat.id
+    # Default 10 messages clean
+    count = 10  
+    
+    for i in range(count):
+        try:
+            context.bot.delete_message(chat_id=chat_id, message_id=update.message.message_id - i)
+        except:
+            pass
+    
+    update.message.reply_text(f"✅ {count} messages deleted!")
 
-@app.on_message(filters.command("start"))
-async def start(_, message):
-    await message.reply("👋 Bot running successfully 24/7!")
+updater = Updater(BOT_TOKEN, use_context=True)
+dp = updater.dispatcher
 
-@app.on_message(filters.command("clean") & filters.reply)
-async def clean(_, message):
-    try:
-        await message.reply_to_message.delete()
-        await message.delete()
-    except:
-        await message.reply("⚠️ Can't delete this message!")
+dp.add_handler(CommandHandler("clean", clean))
 
-app.run()
+updater.start_polling()
+updater.idle()
